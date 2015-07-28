@@ -34,6 +34,8 @@ public class UrlUtils {
         if (address.indexOf("://") >= 0) {
             url = address;
         } else {
+            //此处把192.168.8.18:2181,192.168.8.19:2181,192.168.8.20:2181
+            // 结构的转为10.20.153.10:2181?backup=10.20.153.11:2181,10.20.153.12:2181结构的
             String[] addresses = Constants.COMMA_SPLIT_PATTERN.split(address);
             url = addresses[0];
             if (addresses.length > 1) {

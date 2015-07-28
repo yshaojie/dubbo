@@ -216,7 +216,13 @@ public abstract class AbstractConfig implements Serializable {
     protected static void appendParameters(Map<String, String> parameters, Object config) {
         appendParameters(parameters, config, null);
     }
-    
+
+    /**
+     * 将Object config里面的属性添加到Map parameters 里面
+     * @param parameters
+     * @param config
+     * @param prefix key的前缀
+     */
     @SuppressWarnings("unchecked")
     protected static void appendParameters(Map<String, String> parameters, Object config, String prefix) {
         if (config == null) {

@@ -159,6 +159,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
         checkRegistry();
         List<URL> registryList = new ArrayList<URL>();
         if (registries != null && registries.size() > 0) {
+            //<dubbo:registry/>
             for (RegistryConfig config : registries) {
                 String address = config.getAddress();
                 if (address == null || address.length() == 0) {
@@ -168,17 +169,23 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                 if (sysaddress != null && sysaddress.length() > 0) {
                     address = sysaddress;
                 }
+                //注册地址合法且不为N/A
                 if (address != null && address.length() > 0 
                         && ! RegistryConfig.NO_AVAILABLE.equalsIgnoreCase(address)) {
                     Map<String, String> map = new HashMap<String, String>();
+                    //将application里的属性put进map里面
                     appendParameters(map, application);
+                    //将config里的属性put进map里面
                     appendParameters(map, config);
                     map.put("path", RegistryService.class.getName());
+                    //设置dubbo版本
                     map.put("dubbo", Version.getVersion());
                     map.put(Constants.TIMESTAMP_KEY, String.valueOf(System.currentTimeMillis()));
+                    //设置pid
                     if (ConfigUtils.getPid() > 0) {
                         map.put(Constants.PID_KEY, String.valueOf(ConfigUtils.getPid()));
                     }
+                    //不包含协议，则指定默认协议
                     if (! map.containsKey("protocol")) {
                         if (ExtensionLoader.getExtensionLoader(RegistryFactory.class).hasExtension("remote")) {
                             map.put("protocol", "remote");
@@ -200,7 +207,12 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
         }
         return registryList;
     }
-    
+
+    /**
+     * 拼接监控中心url
+     * @param registryURL
+     * @return
+     */
     protected URL loadMonitor(URL registryURL) {
         if (monitor == null) {
             String monitorAddress = ConfigUtils.getProperty("dubbo.monitor.address");
@@ -214,6 +226,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
         }
         appendProperties(monitor);
         Map<String, String> map = new HashMap<String, String>();
+        //设置监控数据收集接口
         map.put(Constants.INTERFACE_KEY, MonitorService.class.getName());
         map.put("dubbo", Version.getVersion());
         map.put(Constants.TIMESTAMP_KEY, String.valueOf(System.currentTimeMillis()));

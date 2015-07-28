@@ -76,15 +76,21 @@ public class ReferenceBean<T> extends ReferenceConfig<T> implements FactoryBean,
 
     @SuppressWarnings({ "unchecked"})
     public void afterPropertiesSet() throws Exception {
+        //如果Consumer还未注册
         if (getConsumer() == null) {
+            //获取applicationContext这个IOC容器实例中的所有ConsumerConfig
             Map<String, ConsumerConfig> consumerConfigMap = applicationContext == null ? null  : BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext, ConsumerConfig.class, false, false);
             if (consumerConfigMap != null && consumerConfigMap.size() > 0) {
                 ConsumerConfig consumerConfig = null;
+                //遍历consumerConfigMap
                 for (ConsumerConfig config : consumerConfigMap.values()) {
+                    //如果是默认配置
                     if (config.isDefault() == null || config.isDefault().booleanValue()) {
+                        //已经存在consumerConfig 配置
                         if (consumerConfig != null) {
                             throw new IllegalStateException("Duplicate consumer configs: " + consumerConfig + " and " + config);
                         }
+                        //设置当前配置为consumerConfig
                         consumerConfig = config;
                     }
                 }
@@ -93,12 +99,17 @@ public class ReferenceBean<T> extends ReferenceConfig<T> implements FactoryBean,
                 }
             }
         }
+        //应用名称没有初始化，<dubbo:application name="dubbo-test-consumer" /> 或者<dubbo:consumer default="true" application="dd"/> 没有配置
         if (getApplication() == null
                 && (getConsumer() == null || getConsumer().getApplication() == null)) {
+            //获取applicationContext所有的ApplicationConfig实例
             Map<String, ApplicationConfig> applicationConfigMap = applicationContext == null ? null : BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext, ApplicationConfig.class, false, false);
+            //
             if (applicationConfigMap != null && applicationConfigMap.size() > 0) {
                 ApplicationConfig applicationConfig = null;
+                //遍历ApplicationConfig
                 for (ApplicationConfig config : applicationConfigMap.values()) {
+                    //是默认的，则设置为applicationConfig
                     if (config.isDefault() == null || config.isDefault().booleanValue()) {
                         if (applicationConfig != null) {
                             throw new IllegalStateException("Duplicate application configs: " + applicationConfig + " and " + config);
@@ -106,11 +117,13 @@ public class ReferenceBean<T> extends ReferenceConfig<T> implements FactoryBean,
                         applicationConfig = config;
                     }
                 }
+                //applicationConfig为非空的，该校验使用ReferenceConfig.init();在做的
                 if (applicationConfig != null) {
                     setApplication(applicationConfig);
                 }
             }
         }
+        //初始化module，如同上边application
         if (getModule() == null
                 && (getConsumer() == null || getConsumer().getModule() == null)) {
             Map<String, ModuleConfig> moduleConfigMap = applicationContext == null ? null : BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext, ModuleConfig.class, false, false);
@@ -129,6 +142,8 @@ public class ReferenceBean<T> extends ReferenceConfig<T> implements FactoryBean,
                 }
             }
         }
+
+        //初始化registries，如同上边application
         if ((getRegistries() == null || getRegistries().size() == 0)
                 && (getConsumer() == null || getConsumer().getRegistries() == null || getConsumer().getRegistries().size() == 0)
                 && (getApplication() == null || getApplication().getRegistries() == null || getApplication().getRegistries().size() == 0)) {
@@ -145,6 +160,8 @@ public class ReferenceBean<T> extends ReferenceConfig<T> implements FactoryBean,
                 }
             }
         }
+
+        //初始化monitor，如同上边application
         if (getMonitor() == null
                 && (getConsumer() == null || getConsumer().getMonitor() == null)
                 && (getApplication() == null || getApplication().getMonitor() == null)) {
@@ -168,7 +185,9 @@ public class ReferenceBean<T> extends ReferenceConfig<T> implements FactoryBean,
         if (b == null && getConsumer() != null) {
             b = getConsumer().isInit();
         }
+        //需要初始化
         if (b != null && b.booleanValue()) {
+            //手动调用，获取bean，进行bean初始化
             getObject();
         }
     }

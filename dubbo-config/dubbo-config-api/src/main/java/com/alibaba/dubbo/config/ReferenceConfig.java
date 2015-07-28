@@ -67,7 +67,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
     private static final ProxyFactory proxyFactory = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getAdaptiveExtension();
 
     // 接口类型
-    private String               interfaceName;
+    private String               interfaceName; //<dubbo:reference interface="com.api.DemoService" /> 里的interface属性
 
     private Class<?>             interfaceClass;
 
@@ -158,6 +158,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
     }
 
     private void init() {
+        //已经初始化完成
 	    if (initialized) {
 	        return;
 	    }
@@ -165,7 +166,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
     	if (interfaceName == null || interfaceName.length() == 0) {
     	    throw new IllegalStateException("<dubbo:reference interface=\"\" /> interface not allow null!");
     	}
-    	// 获取消费者全局配置
+    	//检查消费者，不存在则创建默认的
     	checkDefault();
         appendProperties(this);
         if (getGeneric() == null && getConsumer() != null) {
@@ -175,11 +176,13 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
             interfaceClass = GenericService.class;
         } else {
             try {
+                //设置reference的接口类
 				interfaceClass = Class.forName(interfaceName, true, Thread.currentThread()
 				        .getContextClassLoader());
 			} catch (ClassNotFoundException e) {
 				throw new IllegalStateException(e.getMessage(), e);
 			}
+            //检查配置中的method是否存在与类interfaceClass中
             checkInterfaceAndMethods(interfaceClass, methods);
         }
         String resolve = System.getProperty(interfaceName);
@@ -220,7 +223,9 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         		}
     		}
         }
+        //<dubbo:consumer/>服务消费者缺省值配置
         if (consumer != null) {
+            //application为空，则去consumer的application
             if (application == null) {
                 application = consumer.getApplication();
             }
@@ -297,6 +302,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         }
         //attributes通过系统context进行存储.
         StaticContext.getSystemContext().putAll(attributes);
+        //根据<dubbo:reference/>来创建代理
         ref = createProxy(map);
     }
     
@@ -373,7 +379,9 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                     }
                 }
             } else { // 通过注册中心配置拼装URL
+                //查询配置的注册中心，一个reference对应多注册中心
             	List<URL> us = loadRegistries(false);
+                //遍历注册中心，为每个注册中心添加监控service
             	if (us != null && us.size() > 0) {
                 	for (URL u : us) {
                 	    URL monitorUrl = loadMonitor(u);
