@@ -91,6 +91,7 @@ public class ExtensionLoader<T> {
 
     private final ConcurrentMap<String, Holder<Object>> cachedInstances = new ConcurrentHashMap<String, Holder<Object>>();
 
+    //默认的适配器
     private String cachedDefaultName;
 
     private final Holder<Object> cachedAdaptiveInstance = new Holder<Object>();
@@ -572,10 +573,19 @@ public class ExtensionLoader<T> {
         return classes;
 	}
 
-    // 此方法已经getExtensionClasses方法同步过。
+    /**
+     * 此方法已经getExtensionClasses方法同步过
+     * 加载spi式 配置文件
+     * META-INF/services/
+     * META-INF/dubbo/
+     * META-INF/dubbo/internal/
+     * 分别从一下目录加载配置文件
+     * @return
+     */
     private Map<String, Class<?>> loadExtensionClasses() {
         final SPI defaultAnnotation = type.getAnnotation(SPI.class);
         if(defaultAnnotation != null) {
+            //默认适配器名字
             String value = defaultAnnotation.value();
             if(value != null && (value = value.trim()).length() > 0) {
                 String[] names = NAME_SEPARATOR.split(value);
@@ -583,11 +593,13 @@ public class ExtensionLoader<T> {
                     throw new IllegalStateException("more than 1 default extension name on extension " + type.getName()
                             + ": " + Arrays.toString(names));
                 }
+                //只有一个才算合法的默认适配器
                 if(names.length == 1) cachedDefaultName = names[0];
             }
         }
         
         Map<String, Class<?>> extensionClasses = new HashMap<String, Class<?>>();
+        //从三个目录加载配置文件
         loadFile(extensionClasses, DUBBO_INTERNAL_DIRECTORY);
         loadFile(extensionClasses, DUBBO_DIRECTORY);
         loadFile(extensionClasses, SERVICES_DIRECTORY);
@@ -620,18 +632,23 @@ public class ExtensionLoader<T> {
                                         String name = null;
                                         int i = line.indexOf('=');
                                         if (i > 0) {
+                                            //注解名称
                                             name = line.substring(0, i).trim();
                                             line = line.substring(i + 1).trim();
                                         }
                                         if (line.length() > 0) {
+                                            //加载适配类
                                             Class<?> clazz = Class.forName(line, true, classLoader);
                                             if (! type.isAssignableFrom(clazz)) {
                                                 throw new IllegalStateException("Error when load extension class(interface: " +
                                                         type + ", class line: " + clazz.getName() + "), class " 
                                                         + clazz.getName() + "is not subtype of interface.");
                                             }
+                                            //如果class上配置@Adaptive，那么作为静态默认适配器
+                                            //选用适配器时，优先选用该适配器
                                             if (clazz.isAnnotationPresent(Adaptive.class)) {
                                                 if(cachedAdaptiveClass == null) {
+                                                    //缓存该适配器
                                                     cachedAdaptiveClass = clazz;
                                                 } else if (! cachedAdaptiveClass.equals(clazz)) {
                                                     throw new IllegalStateException("More than 1 adaptive class found: "
@@ -640,15 +657,19 @@ public class ExtensionLoader<T> {
                                                 }
                                             } else {
                                                 try {
+                                                    //看该class是否含有type的构造方法，有的话，说明是type的包装类
                                                     clazz.getConstructor(type);
                                                     Set<Class<?>> wrappers = cachedWrapperClasses;
                                                     if (wrappers == null) {
                                                         cachedWrapperClasses = new ConcurrentHashSet<Class<?>>();
                                                         wrappers = cachedWrapperClasses;
                                                     }
+                                                    //包装类集合
                                                     wrappers.add(clazz);
                                                 } catch (NoSuchMethodException e) {
                                                     clazz.getConstructor();
+                                                    //没有配置注解名称,例如：com.alibaba.dubbo.remoting.transport.netty.NettyTransporter
+                                                    //正常netty=com.alibaba.dubbo.remoting.transport.netty.NettyTransporter
                                                     if (name == null || name.length() == 0) {
                                                         name = findAnnotationName(clazz);
                                                         if (name == null || name.length() == 0) {
@@ -660,18 +681,22 @@ public class ExtensionLoader<T> {
                                                             }
                                                         }
                                                     }
+                                                    //可以用，配置多个名称xx,xx,xx=com.alibaba.dubbo.remoting.transport.netty.NettyTransporter
                                                     String[] names = NAME_SEPARATOR.split(name);
                                                     if (names != null && names.length > 0) {
                                                         Activate activate = clazz.getAnnotation(Activate.class);
+                                                        //扩展配置了激活注解
                                                         if (activate != null) {
                                                             cachedActivates.put(names[0], activate);
                                                         }
                                                         for (String n : names) {
+                                                            //代码意义何在？
                                                             if (! cachedNames.containsKey(clazz)) {
                                                                 cachedNames.put(clazz, n);
                                                             }
                                                             Class<?> c = extensionClasses.get(n);
                                                             if (c == null) {
+                                                                //加入扩展map
                                                                 extensionClasses.put(n, clazz);
                                                             } else if (c != clazz) {
                                                                 throw new IllegalStateException("Duplicate extension " + type.getName() + " name " + n + " on " + c.getName() + " and " + clazz.getName());
