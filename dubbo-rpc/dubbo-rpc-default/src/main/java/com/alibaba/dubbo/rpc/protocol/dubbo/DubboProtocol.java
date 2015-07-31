@@ -227,6 +227,13 @@ public class DubboProtocol extends AbstractProtocol {
         return DEFAULT_PORT;
     }
 
+    /**
+     * 暴露服务
+     * @param invoker 服务的执行体
+     * @param <T>
+     * @return
+     * @throws RpcException
+     */
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
         URL url = invoker.getUrl();
         
@@ -259,7 +266,7 @@ public class DubboProtocol extends AbstractProtocol {
         // find server.
         String key = url.getAddress();
         //client 也可以暴露一个只有server可以调用的服务。
-        boolean isServer = url.getParameter(Constants.IS_SERVER_KEY,true);
+        boolean isServer = url.getParameter(Constants.IS_SERVER_KEY, true);
         if (isServer) {
         	ExchangeServer server = serverMap.get(key);
         	if (server == null) {
@@ -288,8 +295,11 @@ public class DubboProtocol extends AbstractProtocol {
         } catch (RemotingException e) {
             throw new RpcException("Fail to start server(url: " + url + ") " + e.getMessage(), e);
         }
+        //client网络传输框架
         str = url.getParameter(Constants.CLIENT_KEY);
+        //检查指定的网络框架是否支持
         if (str != null && str.length() > 0) {
+            //查询支持的Transporter扩展
             Set<String> supportedTypes = ExtensionLoader.getExtensionLoader(Transporter.class).getSupportedExtensions();
             if (!supportedTypes.contains(str)) {
                 throw new RpcException("Unsupported client type: " + str);

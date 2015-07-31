@@ -125,16 +125,23 @@ public class UrlUtils {
         return u;
     }
 
+    /**
+     * 解析url
+     * @param address 注册地址
+     * @param defaults
+     * @return
+     */
     public static List<URL> parseURLs(String address, Map<String, String> defaults) {
         if (address == null || address.length() == 0) {
             return null;
         }
+        //<dubbo:registry>里面包含多个注册中心
         String[] addresses = Constants.REGISTRY_SPLIT_PATTERN.split(address);
         if (addresses == null || addresses.length == 0) {
             return null; //here won't be empty
         }
         List<URL> registries = new ArrayList<URL>();
-        for (String addr : addresses) {
+        for (String addr : addresses) {//遍历添加
             registries.add(parseURL(addr, defaults));
         }
         return registries;

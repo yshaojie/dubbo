@@ -159,7 +159,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
         checkRegistry();
         List<URL> registryList = new ArrayList<URL>();
         if (registries != null && registries.size() > 0) {
-            //<dubbo:registry/>
+            //<dubbo:registry/> 多注册中心
             for (RegistryConfig config : registries) {
                 String address = config.getAddress();
                 if (address == null || address.length() == 0) {
@@ -199,6 +199,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                         url = url.setProtocol(Constants.REGISTRY_PROTOCOL);
                         if ((provider && url.getParameter(Constants.REGISTER_KEY, true))
                                 || (! provider && url.getParameter(Constants.SUBSCRIBE_KEY, true))) {
+                            //添加到注册列表
                             registryList.add(url);
                         }
                     }
@@ -215,6 +216,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
      */
     protected URL loadMonitor(URL registryURL) {
         if (monitor == null) {
+            //通过配置文件配置了监控，那么初始化
             String monitorAddress = ConfigUtils.getProperty("dubbo.monitor.address");
             String monitorProtocol = ConfigUtils.getProperty("dubbo.monitor.protocol");
             if (monitorAddress != null && monitorAddress.length() > 0
@@ -247,6 +249,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                     map.put(Constants.PROTOCOL_KEY, "dubbo");
                 }
             }
+            //生成注册url
             return UrlUtils.parseURL(address, map);
         } else if (Constants.REGISTRY_PROTOCOL.equals(monitor.getProtocol()) && registryURL != null) {
             return registryURL.setProtocol("dubbo").addParameter(Constants.PROTOCOL_KEY, "registry").addParameterAndEncoded(Constants.REFER_KEY, StringUtils.toQueryString(map));
