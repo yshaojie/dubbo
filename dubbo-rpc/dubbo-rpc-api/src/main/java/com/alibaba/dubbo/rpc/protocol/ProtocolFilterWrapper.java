@@ -68,8 +68,10 @@ public class ProtocolFilterWrapper implements Protocol {
 
     private static <T> Invoker<T> buildInvokerChain(final Invoker<T> invoker, String key, String group) {
         Invoker<T> last = invoker;
+        //获取该url 有效的filter
         List<Filter> filters = ExtensionLoader.getExtensionLoader(Filter.class).getActivateExtension(invoker.getUrl(), key, group);
         if (filters.size() > 0) {
+            //基于ProtocolFilterWrapper类，将所有Filter组装成链，在链的最后一节调用真实的引用
             for (int i = filters.size() - 1; i >= 0; i --) {
                 final Filter filter = filters.get(i);
                 final Invoker<T> next = last;
@@ -88,6 +90,7 @@ public class ProtocolFilterWrapper implements Protocol {
                     }
 
                     public Result invoke(Invocation invocation) throws RpcException {
+                        //组装调用链
                         return filter.invoke(next, invocation);
                     }
 
