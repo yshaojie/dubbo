@@ -1161,7 +1161,10 @@ public final class URL implements Serializable {
 			path = getPath();
 		}
 		if (path != null && path.length() > 0) {
-			buf.append("/");
+            //如果不是以/开头，则填充/ 目的是防止 http://xxx:8080//aa/bb/出现
+            if (!path.startsWith("/")) {
+                buf.append("/");
+            }
 			buf.append(path);
 		}
 		if (appendParameter) {
