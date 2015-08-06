@@ -25,5 +25,5 @@ import com.alibaba.dubbo.common.URL;
  * @see com.alibaba.dubbo.registry.support.AbstractRegistry
  * @author william.liangf
  */
-public interface Registry extends Node, RegistryService {
+public interface  Registry extends Node, RegistryService {
 }

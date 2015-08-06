@@ -103,11 +103,12 @@ public class RegistryProtocol implements Protocol {
     private final static Logger logger = LoggerFactory.getLogger(RegistryProtocol.class);
     
     public <T> Exporter<T> export(final Invoker<T> originInvoker) throws RpcException {
-        //export invoker
+        //export invoker，先曝光接口 此处是曝光接口引用，就是启动服务提供者
         final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker);
         //registry provider
         final Registry registry = getRegistry(originInvoker);
         final URL registedProviderUrl = getRegistedProviderUrl(originInvoker);
+        //注册，此处向注册中心注册消息
         registry.register(registedProviderUrl);
         // 订阅override数据
         // FIXME 提供者订阅时，会影响同一JVM即暴露服务，又引用同一服务的的场景，因为subscribed以服务名为缓存的key，导致订阅信息覆盖。
@@ -149,7 +150,9 @@ public class RegistryProtocol implements Protocol {
             synchronized (bounds) {
                 exporter = (ExporterChangeableWrapper<T>) bounds.get(key);
                 if (exporter == null) {
+                    //调用者和调用service接口对应
                     final Invoker<?> invokerDelegete = new InvokerDelegete<T>(originInvoker, getProviderUrl(originInvoker));
+                    //启动服务，曝光接口
                     exporter = new ExporterChangeableWrapper<T>((Exporter<T>)protocol.export(invokerDelegete), originInvoker);
                     bounds.put(key, exporter);
                 }
@@ -187,6 +190,7 @@ public class RegistryProtocol implements Protocol {
             String protocol = registryUrl.getParameter(Constants.REGISTRY_KEY, Constants.DEFAULT_DIRECTORY);
             registryUrl = registryUrl.setProtocol(protocol).removeParameter(Constants.REGISTRY_KEY);
         }
+        //获取注册实例
         return registryFactory.getRegistry(registryUrl);
     }
 
@@ -214,6 +218,7 @@ public class RegistryProtocol implements Protocol {
      * @return
      */
     private URL getProviderUrl(final Invoker<?> origininvoker){
+        //获取调用者url
         String export = origininvoker.getUrl().getParameterAndDecoded(Constants.EXPORT_KEY);
         if (export == null || export.length() == 0) {
             throw new IllegalArgumentException("The registry export url is null! registry: " + origininvoker.getUrl());
