@@ -197,6 +197,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                     for (URL url : urls) {
                         url = url.addParameter(Constants.REGISTRY_KEY, url.getProtocol());
                         url = url.setProtocol(Constants.REGISTRY_PROTOCOL);
+                        //是提供者&&该url是注册url ||　消费者&&该url是订阅者
                         if ((provider && url.getParameter(Constants.REGISTER_KEY, true))
                                 || (! provider && url.getParameter(Constants.SUBSCRIBE_KEY, true))) {
                             //添加到注册列表

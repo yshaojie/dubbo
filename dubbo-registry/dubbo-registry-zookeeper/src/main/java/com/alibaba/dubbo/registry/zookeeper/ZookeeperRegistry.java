@@ -95,6 +95,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
 
     protected void doRegister(URL url) {
         try {
+            //注册服务，true表示是临时节点
         	zkClient.create(toUrlPath(url), url.getParameter(Constants.DYNAMIC_KEY, true));
         } catch (Throwable e) {
             throw new RpcException("Failed to register " + url + " to zookeeper " + getUrl() + ", cause: " + e.getMessage(), e);
@@ -103,6 +104,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
 
     protected void doUnregister(URL url) {
         try {
+            //取消注册删除节点即可
             zkClient.delete(toUrlPath(url));
         } catch (Throwable e) {
             throw new RpcException("Failed to unregister " + url + " to zookeeper " + getUrl() + ", cause: " + e.getMessage(), e);
