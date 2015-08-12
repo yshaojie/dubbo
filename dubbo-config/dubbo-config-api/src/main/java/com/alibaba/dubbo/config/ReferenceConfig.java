@@ -379,7 +379,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                     }
                 }
             } else { // 通过注册中心配置拼装URL
-                //查询配置的注册中心，一个reference对应多注册中心
+                //查询配置的注册中心，一个reference对应多注册中心,比如zkcluster1、zkcluster2
             	List<URL> us = loadRegistries(false);
                 //遍历注册中心，为每个注册中心添加监控service
             	if (us != null && us.size() > 0) {
@@ -395,10 +395,9 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                     throw new IllegalStateException("No such any registry to reference " + interfaceName  + " on the consumer " + NetUtils.getLocalHost() + " use dubbo version " + Version.getVersion() + ", please config <dubbo:registry address=\"...\" /> to your spring config.");
                 }
             }
-
-            if (urls.size() == 1) {
+            if (urls.size() == 1) {//只有一个少一层包装，提高性能
                 invoker = refprotocol.refer(interfaceClass, urls.get(0));
-            } else {
+            } else {//多注册中心处理
                 List<Invoker<?>> invokers = new ArrayList<Invoker<?>>();
                 URL registryURL = null;
                 for (URL url : urls) {

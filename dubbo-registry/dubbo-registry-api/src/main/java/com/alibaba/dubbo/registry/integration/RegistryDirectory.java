@@ -153,10 +153,15 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
         }
     }
 
+    /**
+     * 节点变动通知
+     * @param urls 已注册信息列表，总不为空，含义同{@link com.alibaba.dubbo.registry.RegistryService#lookup(URL)}的返回值。
+     */
     public synchronized void notify(List<URL> urls) {
         List<URL> invokerUrls = new ArrayList<URL>();
         List<URL> routerUrls = new ArrayList<URL>();
         List<URL> configuratorUrls = new ArrayList<URL>();
+        //对通知列表进行分类
         for (URL url : urls) {
             String protocol = url.getProtocol();
             String category = url.getParameter(Constants.CATEGORY_KEY, Constants.DEFAULT_CATEGORY);
@@ -337,7 +342,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
     
     /**
      * 将urls转成invokers,如果url已经被refer过，不再重新引用。
-     * 
+     * urls 都是服务提供者url
      * @param urls
      * @param overrides
      * @param query
@@ -361,18 +366,23 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
         				break;
         			}
         		}
-        		if (!accept) {
+        		if (!accept) {//和reference指定协议不匹配
         			continue;
         		}
         	}
+            //提供者协议为空
             if (Constants.EMPTY_PROTOCOL.equals(providerUrl.getProtocol())) {
                 continue;
             }
+
+            //判断提供者协议是否合法
             if (! ExtensionLoader.getExtensionLoader(Protocol.class).hasExtension(providerUrl.getProtocol())) {
                 logger.error(new IllegalStateException("Unsupported protocol " + providerUrl.getProtocol() + " in notified url: " + providerUrl + " from registry " + getUrl().getAddress() + " to consumer " + NetUtils.getLocalHost() 
                         + ", supported protocol: "+ExtensionLoader.getExtensionLoader(Protocol.class).getSupportedExtensions()));
                 continue;
             }
+
+            //根据配置，合并参数
             URL url = mergeUrl(providerUrl);
             
             String key = url.toFullString(); // URL参数是排序的
@@ -392,6 +402,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
                 		enabled = url.getParameter(Constants.ENABLED_KEY, true);
                 	}
                 	if (enabled) {
+                        //创建接口引用
                 		invoker = new InvokerDelegete<T>(protocol.refer(serviceType, url), url, providerUrl);
                 	}
                 } catch (Throwable t) {
