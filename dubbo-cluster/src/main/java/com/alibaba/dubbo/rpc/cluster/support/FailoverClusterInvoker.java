@@ -15,6 +15,7 @@
  */
 package com.alibaba.dubbo.rpc.cluster.support;
 
+import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -76,6 +77,20 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
             RpcContext.getContext().setInvokers((List)invoked);
             try {
                 Result result = invoker.invoke(invocation);
+
+                if (result!=null && result.getException()!=null) {//有异常，则判断是否需要重试
+                    final Throwable exception = result.getException();
+                    if (exception instanceof RpcException ) {//rpc异常
+                        if(!((RpcException) exception).isBiz()){//非业务异常,进行重试
+                            le = (RpcException)exception;
+                            continue;
+                        }
+                    }else {//非dubbo RpcException 异常，则直接重试
+                        le = new RpcException(exception.getMessage(),exception);
+                        continue;
+                    }
+                }
+
                 if (le != null && logger.isWarnEnabled()) {
                     logger.warn("Although retry the method " + invocation.getMethodName()
                             + " in the service " + getInterface().getName()
