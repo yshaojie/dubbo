@@ -426,6 +426,7 @@ public class ProtocolConfig extends AbstractConfig {
     }
 
     public static void destroyAll() {
+        //先注销注册中心，再关闭服务
         AbstractRegistryFactory.destroyAll();
         ExtensionLoader<Protocol> loader = ExtensionLoader.getExtensionLoader(Protocol.class);
         for (String protocolName : loader.getLoadedExtensions()) {
