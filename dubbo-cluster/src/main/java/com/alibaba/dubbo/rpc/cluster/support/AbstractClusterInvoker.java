@@ -98,7 +98,8 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
         if (invokers == null || invokers.size() == 0)
             return null;
         String methodName = invocation == null ? "" : invocation.getMethodName();
-        
+
+        //有多个服务提供者的情况下，配置了sticky后，在提供者可用的情况下，调用会继续发送到上一次的服务提供者. sticky策略默认开启了连接的lazy选项,用于避免开启无用的连接.
         boolean sticky = invokers.get(0).getUrl().getMethodParameter(methodName,Constants.CLUSTER_STICKY_KEY, Constants.DEFAULT_CLUSTER_STICKY) ;
         {
             //ignore overloaded method
