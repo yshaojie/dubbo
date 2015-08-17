@@ -39,7 +39,7 @@ public class RandomLoadBalance extends AbstractLoadBalance {
         int totalWeight = 0; // 总权重
         boolean sameWeight = true; // 权重是否都一样
         for (int i = 0; i < length; i++) {
-            int weight = getWeight(invokers.get(i), invocation);
+            int weight = getWeight(invokers.get(i), invocation);//获取权重
             totalWeight += weight; // 累计总权重
             if (sameWeight && i > 0
                     && weight != getWeight(invokers.get(i - 1), invocation)) {
