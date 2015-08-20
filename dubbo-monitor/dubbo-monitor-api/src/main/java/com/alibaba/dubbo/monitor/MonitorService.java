@@ -51,7 +51,7 @@ public interface MonitorService {
 
     String OUTPUT = Constants.OUTPUT_KEY;
 
-    String ELAPSED = "elapsed";
+    String ELAPSED = "elapsed";//耗时
 
     String CONCURRENT = "concurrent";
 
@@ -59,9 +59,9 @@ public interface MonitorService {
 
     String MAX_OUTPUT = "max.output";
 
-    String MAX_ELAPSED = "max.elapsed";
+    String MAX_ELAPSED = "max.elapsed";//最大耗时
 
-    String MAX_CONCURRENT = "max.concurrent";
+    String MAX_CONCURRENT = "max.concurrent";//最大并发
 
     /**
      * 监控数据采集.

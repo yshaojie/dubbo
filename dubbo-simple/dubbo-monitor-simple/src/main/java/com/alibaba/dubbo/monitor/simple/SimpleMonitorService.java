@@ -156,7 +156,11 @@ public class SimpleMonitorService implements MonitorService {
             logger.warn(t.getMessage(), t);
         }
     }
-    
+
+    /**
+     * 处理收集的信息
+     * @throws Exception
+     */
     private void write() throws Exception {
         URL statistics = queue.take();
         if (POISON_PROTOCOL.equals(statistics.getProtocol())) {
@@ -171,6 +175,7 @@ public class SimpleMonitorService implements MonitorService {
         } else {
             now = new Date(Long.parseLong(timestamp));
         }
+
         String day = new SimpleDateFormat("yyyyMMdd").format(now);
         SimpleDateFormat format = new SimpleDateFormat("HHmm");
         for (String key : types) {
@@ -195,6 +200,8 @@ public class SimpleMonitorService implements MonitorService {
                     }
                     provider = statistics.getHost();
                 }
+
+                //filename结构  root/day/interface/method/consumer/provider/type.key
                 String filename = statisticsDirectory 
                         + "/" + day 
                         + "/" + statistics.getServiceInterface() 
@@ -202,6 +209,7 @@ public class SimpleMonitorService implements MonitorService {
                         + "/" + consumer 
                         + "/" + provider 
                         + "/" + type + "." + key;
+
                 File file = new File(filename);
                 File dir = file.getParentFile();
                 if (dir != null && ! dir.exists()) {
@@ -225,6 +233,8 @@ public class SimpleMonitorService implements MonitorService {
         if (! rootDir.exists()) {
             return;
         }
+        //com.service.OrderService/createOrder/192.168.2.201/10.10.20.52/provider.concurrent
+        //root/day/interface/method/consumer/provider/type.key
         File[] dateDirs = rootDir.listFiles();
         for (File dateDir : dateDirs) {
             File[] serviceDirs = dateDir.listFiles();
@@ -232,38 +242,40 @@ public class SimpleMonitorService implements MonitorService {
                 File[] methodDirs = serviceDir.listFiles();
                 for (File methodDir : methodDirs) {
                     String methodUri = chartsDirectory + "/" + dateDir.getName() + "/" + serviceDir.getName() + "/" + methodDir.getName();
-                    
+
                     File successFile = new File(methodUri + "/" + SUCCESS + ".png");
                     long successModified = successFile.lastModified();
                     boolean successChanged = false;
                     Map<String, long[]> successData = new HashMap<String, long[]>();
                     double[] successSummary = new double[4];
-                    
+
                     File elapsedFile = new File(methodUri + "/" + ELAPSED + ".png");
                     long elapsedModified = elapsedFile.lastModified();
                     boolean elapsedChanged = false;
                     Map<String, long[]> elapsedData = new HashMap<String, long[]>();
                     double[] elapsedSummary = new double[4];
                     long elapsedMax = 0;
-                    
+
                     File[] consumerDirs = methodDir.listFiles();
                     for (File consumerDir : consumerDirs) {
                         File[] providerDirs = consumerDir.listFiles();
                         for (File providerDir : providerDirs) {
+                            //消费成功文件
                             File consumerSuccessFile = new File(providerDir, CONSUMER + "." + SUCCESS);
+                            //接口调用者成功文件
                             File providerSuccessFile = new File(providerDir, PROVIDER + "." + SUCCESS);
                             appendData(new File[] {consumerSuccessFile, providerSuccessFile}, successData, successSummary);
-                            if (consumerSuccessFile.lastModified() > successModified 
+                            if (consumerSuccessFile.lastModified() > successModified
                                     || providerSuccessFile.lastModified() > successModified) {
                                 successChanged = true;
                             }
-                            
+
                             File consumerElapsedFile = new File(providerDir, CONSUMER + "." + ELAPSED);
                             File providerElapsedFile = new File(providerDir, PROVIDER + "." + ELAPSED);
                             appendData(new File[] {consumerElapsedFile, providerElapsedFile}, elapsedData, elapsedSummary);
                             elapsedMax = Math.max(elapsedMax, CountUtils.max(new File(providerDir, CONSUMER + "." + MAX_ELAPSED)));
                             elapsedMax = Math.max(elapsedMax, CountUtils.max(new File(providerDir, PROVIDER + "." + MAX_ELAPSED)));
-                            if (consumerElapsedFile.lastModified() > elapsedModified 
+                            if (consumerElapsedFile.lastModified() > elapsedModified
                                     || providerElapsedFile.lastModified() > elapsedModified) {
                                 elapsedChanged = true;
                             }
