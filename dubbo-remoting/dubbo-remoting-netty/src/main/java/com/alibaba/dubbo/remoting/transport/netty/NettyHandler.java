@@ -44,7 +44,12 @@ public class NettyHandler extends SimpleChannelHandler {
     private final URL url;
     
     private final ChannelHandler handler;
-    
+
+    /**
+     *
+     * @param url
+     * @param handler NettyServer
+     */
     public NettyHandler(URL url, ChannelHandler handler){
         if (url == null) {
             throw new IllegalArgumentException("url == null");

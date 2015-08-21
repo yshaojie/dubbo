@@ -166,7 +166,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
                 if (request.isEvent()) {
                     handlerEvent(channel, request);
                 } else {
-                    if (request.isTwoWay()) {
+                    if (request.isTwoWay()) {//调用走的此处分支
                         Response response = handleRequest(exchangeChannel, request);
                         channel.send(response);
                     } else {
