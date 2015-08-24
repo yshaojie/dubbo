@@ -235,9 +235,10 @@ public class DefaultFuture implements ResponseFuture {
 
     public static void received(Channel channel, Response response) {
         try {
+            //此处是实现异步的关键
             DefaultFuture future = FUTURES.remove(response.getId());
             if (future != null) {
-                future.doReceived(response);
+                future.doReceived(response);//回调
             } else {
                 logger.warn("The timeout response finally returned at " 
                             + (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date())) 

@@ -48,6 +48,7 @@ public abstract class AbstractPeer implements Endpoint, ChannelHandler {
     }
 
     public void send(Object message) throws RemotingException {
+        //sent="true" 等待消息发出，消息发送失败将抛出异常。 sent="false" 不等待消息发出，将消息放入IO队列，即刻返回。
         send(message, url.getParameter(Constants.SENT_KEY, false));
     }
 
